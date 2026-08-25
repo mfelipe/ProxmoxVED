@@ -11,7 +11,7 @@ source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_
 
 APP="OpenViking"
 var_tags="${var_tags:-ai;memory;rag}"
-var_arm64="${var_arm64:-yes}"
+var_arm64="${var_arm64:-no}" # no: cannot be verified/tested on arm64
 var_unprivileged="${var_unprivileged:-1}"
 if [[ -z "${var_os:-}" ]] && command -v pveversion >/dev/null 2>&1; then
   var_os=$(msg_menu "Choose the container OS" \
@@ -52,13 +52,9 @@ update_deb_based() {
     systemctl stop openviking
     msg_ok "Stopped Service"
 
-    create_backup /etc/openviking /var/lib/openviking
-
-    msg_info "Updating ${APP} (Patience)"
+    msg_info "Updating ${APP}"
     $STD uv pip install --python /opt/openviking/bin/python --upgrade openviking
     msg_ok "Updated ${APP}"
-
-    restore_backup
 
     msg_info "Starting Service"
     systemctl start openviking
@@ -82,13 +78,9 @@ update_alpine() {
     $STD rc-service openviking stop
     msg_ok "Stopped Service"
 
-    create_backup /etc/openviking /var/lib/openviking
-
-    msg_info "Updating ${APP} (Patience)"
+    msg_info "Updating ${APP}"
     $STD uv pip install --python /opt/openviking/bin/python --upgrade openviking
     msg_ok "Updated ${APP}"
-
-    restore_backup
 
     msg_info "Starting Service"
     $STD rc-service openviking start
@@ -114,6 +106,6 @@ echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW}Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:1933/studio${CL}"
 echo -e "${INFO}${YW}Root API Key:${CL}"
-echo -e "${TAB}${DGN}$(pct exec "$CTID" -- sed -n 's/.*"root_api_key": "\([^"]*\)".*/\1/p' /etc/openviking/ov.conf)${CL}"
-echo -e "${INFO}${YW}Model API keys are configured in /etc/openviking/ov.conf${CL}"
+echo -e "${TAB}${DGN}$(pct exec "$CTID" -- sed -n 's/.*"root_api_key": "\([^"]*\)".*/\1/p' /opt/openviking_data/ov.conf)${CL}"
+echo -e "${INFO}${YW}Model API keys are configured in /opt/openviking_data/ov.conf${CL}"
 echo -e "${TAB}${DGN}Edit the file and restart the openviking service afterwards${CL}"

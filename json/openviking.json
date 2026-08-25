@@ -9,8 +9,7 @@
   "updateable": true,
   "privileged": false,
   "architectures": [
-    "amd64",
-    "arm64"
+    "amd64"
   ],
   "interface_port": 1933,
   "documentation": "https://docs.openviking.ai/",
@@ -22,7 +21,7 @@
     {
       "type": "default",
       "script": "ct/openviking.sh",
-      "config_path": "/etc/openviking/ov.conf",
+      "config_path": "/opt/openviking_data/ov.conf",
       "resources": {
         "cpu": 2,
         "ram": 2048,
@@ -34,7 +33,7 @@
     {
       "type": "alpine",
       "script": "ct/openviking.sh",
-      "config_path": "/etc/openviking/ov.conf",
+      "config_path": "/opt/openviking_data/ov.conf",
       "resources": {
         "cpu": 1,
         "ram": 1024,
@@ -50,11 +49,11 @@
   },
   "notes": [
     {
-      "text": "Model API keys must be configured in /etc/openviking/ov.conf (embedding and VLM sections) before the server can store or retrieve memory. Edit the file and restart the service afterwards.",
+      "text": "Model API keys must be configured in /opt/openviking_data/ov.conf (embedding and VLM sections) before the server can store or retrieve memory. Edit the file and restart the service afterwards.",
       "type": "warning"
     },
     {
-      "text": "A root API key is generated during install and printed at the end of the setup; it is also stored as server.root_api_key in /etc/openviking/ov.conf.",
+      "text": "A root API key is generated during install and printed at the end of the setup; it is also stored as server.root_api_key in /opt/openviking_data/ov.conf.",
       "type": "info"
     }
   ]

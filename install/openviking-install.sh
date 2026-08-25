@@ -16,7 +16,7 @@ update_os
 _ov_install_server() {
   PYTHON_VERSION="3.12" setup_uv
 
-  msg_info "Installing OpenViking (Patience)"
+  msg_info "Installing OpenViking"
   $STD uv venv --python 3.12 /opt/openviking
   $STD uv pip install --python /opt/openviking/bin/python openviking
   cat <<EOF >~/.openviking-server
@@ -26,8 +26,8 @@ EOF
 
   msg_info "Configuring OpenViking"
   ROOT_API_KEY=$(openssl rand -hex 32)
-  mkdir -p /etc/openviking /var/lib/openviking
-  cat <<EOF >/etc/openviking/ov.conf
+  mkdir -p /opt/openviking_data
+  cat <<EOF >/opt/openviking_data/ov.conf
 {
   "server": {
     "host": "0.0.0.0",
@@ -36,7 +36,7 @@ EOF
     "cors_origins": ["*"]
   },
   "storage": {
-    "workspace": "/var/lib/openviking/data",
+    "workspace": "/opt/openviking_data/data",
     "agfs": { "backend": "local" },
     "vectordb": { "backend": "local" }
   },
@@ -57,7 +57,7 @@ EOF
   }
 }
 EOF
-  chmod 600 /etc/openviking/ov.conf
+  chmod 600 /opt/openviking_data/ov.conf
   msg_ok "Configured OpenViking"
 }
 
@@ -78,8 +78,7 @@ _ov_wait_ready() {
 
 setup_deb_based() {
   msg_info "Installing Dependencies"
-  $STD apt install -y \
-    openssl
+  $STD apt install -y openssl
   msg_ok "Installed Dependencies"
 
   _ov_install_server
@@ -93,8 +92,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/var/lib/openviking
-Environment="OPENVIKING_CONFIG_FILE=/etc/openviking/ov.conf"
+WorkingDirectory=/opt/openviking_data
+Environment="OPENVIKING_CONFIG_FILE=/opt/openviking_data/ov.conf"
 ExecStart=/opt/openviking/bin/openviking-server
 Restart=always
 RestartSec=5
@@ -109,8 +108,7 @@ EOF
 
 setup_alpine() {
   msg_info "Installing Dependencies"
-  $STD apk add \
-    openssl
+  $STD apk add openssl
   msg_ok "Installed Dependencies"
 
   _ov_install_server
@@ -135,13 +133,13 @@ depend() {
 }
 
 start_pre() {
-  checkpath -d -m 0750 -o root:root /var/lib/openviking
+  checkpath -d -m 0750 -o root:root /opt/openviking_data
   checkpath -f -m 0640 "$output_log"
 }
 EOF
   chmod +x /etc/init.d/openviking
   cat <<EOF >/etc/conf.d/openviking
-export OPENVIKING_CONFIG_FILE=/etc/openviking/ov.conf
+export OPENVIKING_CONFIG_FILE=/opt/openviking_data/ov.conf
 EOF
   $STD rc-update add openviking default
   $STD rc-service openviking start
@@ -152,10 +150,10 @@ EOF
 run_os_setup
 
 msg_info "Running OpenViking Doctor"
-if OPENVIKING_CONFIG_FILE=/etc/openviking/ov.conf /opt/openviking/bin/openviking-server doctor >/dev/null 2>&1; then
+if OPENVIKING_CONFIG_FILE=/opt/openviking_data/ov.conf /opt/openviking/bin/openviking-server doctor >/dev/null 2>&1; then
   msg_ok "Doctor check passed"
 else
-  msg_warn "Doctor check reported warnings — configure the model API keys in /etc/openviking/ov.conf and restart the service"
+  msg_warn "Doctor check reported warnings — configure the model API keys in /opt/openviking_data/ov.conf and restart the service"
 fi
 
 motd_ssh
