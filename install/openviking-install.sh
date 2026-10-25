@@ -111,6 +111,21 @@ setup_alpine() {
   $STD apk add openssl
   msg_ok "Installed Dependencies"
 
+  # Neither openviking itself nor tree-sitter-language-pack (a hard pin of
+  # openviking 0.5.2) publishes a musllinux wheel, so uv builds both from the
+  # sdists: openviking is a ~645-crate Rust workspace, tree-sitter-language-pack
+  # compiles the grammar crates. maturin only bootstraps its own Rust when
+  # `cargo` is missing from PATH, and that bootstrap cannot run on musl here
+  # (cargo exits 127). Alpine has no rust/cargo package any more, only rustup.
+  # perl builds the OpenSSL that openssl-sys vendors; patchelf is what maturin
+  # needs to bundle libragfs_python.so (it links libgcc_s); cmake and
+  # linux-headers cover the remaining -sys crates.
+  msg_info "Installing Rust toolchain and build dependencies"
+  $STD apk add --no-cache build-base rustup perl patchelf cmake linux-headers
+  $STD rustup-init -y --profile minimal
+  export PATH="/root/.cargo/bin:$PATH"
+  msg_ok "Installed Rust toolchain ($(cargo --version 2>/dev/null || echo none))"
+
   _ov_install_server
 
   msg_info "Creating Service"
