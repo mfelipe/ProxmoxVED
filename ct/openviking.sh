@@ -22,8 +22,12 @@ fi
 
 if [[ "${var_os:-}" == "alpine" ]]; then
   var_cpu="${var_cpu:-1}"
-  var_ram="${var_ram:-1024}"
-  var_disk="${var_disk:-8}"
+  # Alpine has to compile openviking and tree-sitter-language-pack from their
+  # sdists (no musllinux wheels): ~645 crates with LTO, a vendored OpenSSL and
+  # the tree-sitter grammars. 3 GB RAM survives the LTO link, and the cargo
+  # target directory alone runs to several GB.
+  var_ram="${var_ram:-3072}"
+  var_disk="${var_disk:-20}"
   var_version="${var_version:-3.24}"
 else
   var_cpu="${var_cpu:-2}"
